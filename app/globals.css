@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --panel: rgba(255, 255, 255, 0.95);
+  --line: rgba(0, 0, 0, 0.18);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Trebuchet MS", "Segoe UI", "Noto Sans SC", sans-serif;
+  --font-mono: "Consolas", "JetBrains Mono", monospace;
+}
+
+body {
+  background: #ffffff;
+  color: black;
+  font-family: "Trebuchet MS", "Segoe UI", "Noto Sans SC", sans-serif;
+}
+
+* {
+  border-color: var(--line);
+}
+
+::selection {
+  background: rgba(0, 0, 0, 0.2);
+  color: black;
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main > * {
+  animation: rise 420ms ease-out both;
+}

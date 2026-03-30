@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AnalysisReport {
+  id             String              @id @default(cuid())
+  fileName       String
+  fileType       String
+  originalText   String
+  normalizedText String
+  totalAigcRate  Float
+  riskLevel      String
+  paragraphCount Int
+  highRiskCount  Int
+  topSimilarity  Float
+  hitHistory     Boolean
+  hitSampleName  String?
+  conclusion     String
+  disclaimer     String
+  createdAt      DateTime            @default(now())
+  paragraphs     ParagraphAnalysis[]
+}
+
+model ParagraphAnalysis {
+  id        Int            @id @default(autoincrement())
+  idx       Int
+  text      String
+  score     Float
+  riskLabel String
+  riskColor String
+  reportId  String
+  report    AnalysisReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, idx])
+}
+
+model HistoricalSample {
+  id             String   @id @default(cuid())
+  name           String
+  content        String
+  normalizedText String
+  totalAigcRate  Float
+  createdAt      DateTime @default(now())
+}
