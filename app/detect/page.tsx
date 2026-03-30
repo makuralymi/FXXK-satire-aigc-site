@@ -55,7 +55,8 @@ export default function DetectPage() {
         }),
       });
 
-      const data = (await response.json()) as {
+      const raw = await response.text();
+      let data: {
         id?: string;
         fileName?: string;
         totalAigcRate?: number;
@@ -63,6 +64,17 @@ export default function DetectPage() {
         createdAt?: string;
         error?: string;
       };
+
+      try {
+        data = JSON.parse(raw) as typeof data;
+      } catch {
+        throw new Error(
+          response.ok
+            ? "服务返回了非 JSON 数据，请稍后重试"
+            : `服务异常（${response.status}）: ${raw.slice(0, 120) || "无详细信息"}`,
+        );
+      }
+
       if (!response.ok || !data.id) {
         throw new Error(data.error ?? "检测失败");
       }
