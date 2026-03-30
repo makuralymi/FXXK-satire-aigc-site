@@ -7,6 +7,7 @@ import { FileUp, LoaderCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { parseFileInBrowser } from "@/lib/client-file-parser";
+import { cacheReport, type CachedReport } from "@/lib/local-report-cache";
 import {
   addDetectionRecord,
   clearDetectionHistory,
@@ -73,6 +74,7 @@ export default function DetectPage() {
         totalAigcRate?: number;
         riskLevel?: string;
         createdAt?: string;
+        report?: CachedReport;
         error?: string;
       };
 
@@ -88,6 +90,10 @@ export default function DetectPage() {
 
       if (!response.ok || !data.id) {
         throw new Error(data.error ?? "检测失败");
+      }
+
+      if (data.report) {
+        cacheReport(data.report);
       }
 
       if (

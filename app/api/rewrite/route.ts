@@ -1,9 +1,34 @@
 import { NextResponse } from "next/server";
-import { DISCLAIMER_TEXT } from "@/lib/analyzer";
+import { DISCLAIMER_TEXT, normalizeText } from "@/lib/analyzer";
 import { getReportById, saveReport } from "@/lib/report-store";
 
 type RewritePayload = {
   reportId: string;
+  sourceReport?: {
+    id: string;
+    fileName: string;
+    fileType: string;
+    originalText: string;
+    normalizedText?: string;
+    paragraphCount: number;
+    highRiskCount?: number;
+    topSimilarity?: number;
+    hitHistory?: boolean;
+    hitSampleName?: string;
+    conclusion?: string;
+    disclaimer?: string;
+    createdAt?: string;
+    riskLevel?: string;
+    totalAigcRate?: number;
+    paragraphs: Array<{
+      id?: string;
+      idx: number;
+      text: string;
+      score: number;
+      riskLabel: string;
+      riskColor: "red" | "orange" | "yellow" | "green";
+    }>;
+  };
 };
 
 export async function POST(request: Request) {
@@ -15,7 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "报告ID无效" }, { status: 400 });
     }
 
-    const source = getReportById(reportId);
+    const source = getReportById(reportId) ?? body.sourceReport;
     if (!source) {
       return NextResponse.json({ error: "未找到对应报告" }, { status: 404 });
     }
@@ -32,12 +57,12 @@ export async function POST(request: Request) {
       fileName: `${source.fileName}（降重版）`,
       fileType: source.fileType,
       originalText: source.originalText,
-      normalizedText: source.normalizedText,
+      normalizedText: source.normalizedText ?? normalizeText(source.originalText),
       totalAigcRate: 0,
       riskLevel: "低风险",
       paragraphCount: source.paragraphCount,
       highRiskCount: 0,
-      topSimilarity: source.topSimilarity,
+      topSimilarity: source.topSimilarity ?? 0,
       hitHistory: false,
       hitSampleName: undefined,
       conclusion:

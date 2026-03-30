@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { CheckCircle2, CreditCard, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { calculateRewritePrice, countBillableChars } from "@/lib/pricing";
+import { getCachedReportById, type CachedReport } from "@/lib/local-report-cache";
 
 const WAIT_SECONDS = 30;
 
@@ -25,6 +27,7 @@ export default function RewritePage() {
   const reportId = params.id;
 
   const [billing, setBilling] = useState<BillingInfo | null>(null);
+  const [sourceReport, setSourceReport] = useState<CachedReport | null>(null);
   const [loadingBilling, setLoadingBilling] = useState(true);
   const [paid, setPaid] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(WAIT_SECONDS);
@@ -40,16 +43,55 @@ export default function RewritePage() {
 
   useEffect(() => {
     const loadBilling = async () => {
+      const cached = getCachedReportById(reportId);
+      if (cached) {
+        setSourceReport(cached);
+      }
+
       try {
         const response = await fetch(`/api/report/${reportId}`);
         const data = (await response.json()) as Partial<BillingInfo> & { error?: string };
 
         if (!response.ok || !data.id) {
+          if (cached) {
+            const charCount = countBillableChars(cached.originalText);
+            const { units, totalPrice } = calculateRewritePrice(charCount);
+
+            setBilling({
+              id: cached.id,
+              fileName: cached.fileName,
+              charCount,
+              units,
+              pricePerThousand: 8,
+              totalPrice,
+            });
+            setError("服务器报告不可用，已使用本地缓存计费信息");
+            return;
+          }
+
           throw new Error(data.error ?? "无法获取计费信息");
         }
 
         setBilling(data as BillingInfo);
+        setError(null);
       } catch (loadError) {
+        if (cached) {
+          const charCount = countBillableChars(cached.originalText);
+          const { units, totalPrice } = calculateRewritePrice(charCount);
+
+          setBilling({
+            id: cached.id,
+            fileName: cached.fileName,
+            charCount,
+            units,
+            pricePerThousand: 8,
+            totalPrice,
+          });
+          setError("网络异常，已使用本地缓存计费信息");
+          setLoadingBilling(false);
+          return;
+        }
+
         const message =
           loadError instanceof Error ? loadError.message : "无法获取计费信息";
         setError(message);
@@ -87,12 +129,14 @@ export default function RewritePage() {
 
     const run = async () => {
       try {
+        const payload = sourceReport ? { reportId, sourceReport } : { reportId };
+
         const response = await fetch("/api/rewrite", {
           method: "POST",
           headers: {
             "content-type": "application/json",
           },
-          body: JSON.stringify({ reportId }),
+          body: JSON.stringify(payload),
         });
 
         const data = (await response.json()) as { id?: string; error?: string };
@@ -109,7 +153,7 @@ export default function RewritePage() {
     };
 
     run();
-  }, [paid, reportId, router, secondsLeft]);
+  }, [paid, reportId, router, secondsLeft, sourceReport]);
 
   const canContinueToPay = agreed && Boolean(billing);
   const canVerify = smsCode.trim().length >= 6;

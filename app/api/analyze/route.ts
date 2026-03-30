@@ -18,6 +18,31 @@ type AnalyzeSuccess = {
   totalAigcRate: number;
   riskLevel: string;
   createdAt: string;
+  report: {
+    id: string;
+    fileName: string;
+    fileType: string;
+    originalText: string;
+    normalizedText: string;
+    totalAigcRate: number;
+    riskLevel: string;
+    paragraphCount: number;
+    highRiskCount: number;
+    topSimilarity: number;
+    hitHistory: boolean;
+    hitSampleName?: string;
+    conclusion: string;
+    disclaimer: string;
+    createdAt: string;
+    paragraphs: Array<{
+      id: string;
+      idx: number;
+      text: string;
+      score: number;
+      riskLabel: string;
+      riskColor: "red" | "orange" | "yellow" | "green";
+    }>;
+  };
 };
 
 type AnalyzePayload = {
@@ -126,6 +151,7 @@ export async function POST(request: Request) {
       totalAigcRate: report.totalAigcRate,
       riskLevel: report.riskLevel,
       createdAt: report.createdAt,
+      report,
     });
   } catch (error) {
     const message =
