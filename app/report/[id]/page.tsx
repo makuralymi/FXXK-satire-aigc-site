@@ -4,8 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-export const runtime = "edge";
-
 type ReportPageProps = {
   params: Promise<{ id: string }>;
 };

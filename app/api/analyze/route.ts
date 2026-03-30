@@ -12,8 +12,6 @@ import {
 import { parseUploadedFile } from "@/lib/file-parser";
 import { listHistoryCandidates, saveReport } from "@/lib/report-store";
 
-export const runtime = "edge";
-
 type AnalyzeSuccess = {
   id: string;
   fileName: string;
