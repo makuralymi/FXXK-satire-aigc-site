@@ -15,6 +15,8 @@ import {
 } from "@/lib/local-history";
 
 export default function DetectPage() {
+  const MAX_FILE_SIZE_MB = 8;
+  const MAX_TEXT_LENGTH = 250000;
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,11 @@ export default function DetectPage() {
       return;
     }
 
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setError(`文件过大，请上传小于 ${MAX_FILE_SIZE_MB}MB 的文件`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -41,6 +48,10 @@ export default function DetectPage() {
       const { ext, text } = await parseFileInBrowser(file);
       if (!text) {
         throw new Error("未提取到有效文本内容");
+      }
+
+      if (text.length > MAX_TEXT_LENGTH) {
+        throw new Error("文本内容过长，请拆分文件后重试");
       }
 
       const response = await fetch("/api/analyze", {

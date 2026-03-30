@@ -28,6 +28,8 @@ type AnalyzePayload = {
   originalText: string;
 };
 
+const MAX_TEXT_LENGTH = 250000;
+
 export async function POST(request: Request) {
   try {
     let fileName = "";
@@ -71,6 +73,13 @@ export async function POST(request: Request) {
 
     if (!originalText) {
       return NextResponse.json({ error: "未提取到有效文本内容" }, { status: 400 });
+    }
+
+    if (originalText.length > MAX_TEXT_LENGTH) {
+      return NextResponse.json(
+        { error: "文本内容过长，请拆分文件后重试" },
+        { status: 413 },
+      );
     }
 
     const paragraphs = splitParagraphs(originalText);
