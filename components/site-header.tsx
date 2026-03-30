@@ -17,7 +17,7 @@ export function SiteHeader() {
           </div>
           <div>
             <p className="text-sm font-semibold leading-none tracking-wide">
-              AIGC 神谕检测中心
+              论文AIGC率检测中心
             </p>
             <p className="font-mono text-[10px] text-white/70">v4.0 SATIRE</p>
           </div>

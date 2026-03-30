@@ -120,7 +120,7 @@ export default function DetectPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>上传文稿并启动神谕检测</CardTitle>
+          <CardTitle>上传文稿并启动论文AIGC率检测</CardTitle>
           <CardDescription>
             {supportText}。系统将自动分段、生成段落疑似率并输出完整报告。
           </CardDescription>

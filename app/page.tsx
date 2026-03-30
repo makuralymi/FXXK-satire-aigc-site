@@ -12,7 +12,7 @@ const features = [
   },
   {
     icon: Sparkles,
-    title: "神谕级算法判定",
+    title: "论文AIGC率判定",
     description: "命中历史样本时自动继承历史结论，不命中时保持高风险输出。",
   },
   {
@@ -31,7 +31,7 @@ export default function HomePage() {
           专业检测平台视觉外壳 · 讽刺性概念内核
         </Badge>
         <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-black sm:text-5xl">
-          AIGC 论文检测神谕系统
+          论文AIGC率检测系统
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-black/80 sm:text-base">
           这是一个娱乐向、讽刺向的伪检测网站。它模仿主流平台的交互体验，展示
