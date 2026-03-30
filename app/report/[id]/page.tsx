@@ -246,9 +246,9 @@ export default function ReportPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm leading-7 text-black/80">
             <p>{report.conclusion}</p>
-            <div className="rounded-lg border border-black/20 bg-white p-4 text-black/85">
-              <p className="font-semibold">免责声明</p>
-              <p className="mt-2">{report.disclaimer}</p>
+            <div className="rounded-lg border-2 border-red-300 bg-red-50 p-4 text-base text-red-800">
+              <p className="text-lg font-extrabold text-red-700">免责声明</p>
+              <p className="mt-2 leading-8">{report.disclaimer}</p>
             </div>
           </CardContent>
         </Card>
@@ -286,6 +286,7 @@ export default function ReportPage() {
                 <br />
                 降重降AI，不降不要钱！
               </h2>
+              <p className="text-[10px] text-red-700/70">在本网站查后降低</p>
               <p className="max-w-3xl text-lg leading-8 text-red-700/90">
                 全流程“专家托管”，支持极速润色、智能降重、AIGC率优化与结果美化服务，学术焦虑一键托管。
               </p>

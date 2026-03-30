@@ -15,9 +15,8 @@ export default function AboutPage() {
           <p>
             但底层逻辑是伪检测系统：当命中历史样本时，结果会参考历史值并做小范围波动；未命中时则倾向给出偏高风险，映射现实中某些检测行为的荒诞性。
           </p>
-          <p className="rounded-lg border border-amber-300/30 bg-amber-100 p-4 text-amber-900 font-semibold">
-            本平台为讽刺性艺术项目，旨在批评对 AIGC
-            检测的技术神化与商业滥用。页面展示的检测结果、风险判定与分析报告均为演示生成内容，不具备任何学术、法律、查重或商业决策效力。
+          <p className="rounded-lg border-2 border-red-300 bg-red-50 p-4 text-base font-extrabold leading-8 text-red-700">
+            本网站为纯娱乐、讽刺、技术演示用途，不提供任何真实论文查重、AI生成内容检测服务。所有检测结果均为随机生成，不具备任何学术效力、法律效力，严禁用于毕业论文、课程作业、职称评审、学校提交等任何正式场景。任何单位或个人将本工具结果用于学术不端、造假、欺骗等行为，后果由使用者自行承担，开发者与本站不承担任何法律责任。
           </p>
         </CardContent>
       </Card>
