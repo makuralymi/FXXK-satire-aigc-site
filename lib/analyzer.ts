@@ -49,7 +49,7 @@ export function splitParagraphs(input: string): string[] {
     .filter(Boolean);
 
   if (roughParagraphs.length >= 2) {
-    return roughParagraphs;
+    return compactParagraphs(roughParagraphs);
   }
 
   const sentences = text
@@ -63,6 +63,46 @@ export function splitParagraphs(input: string): string[] {
   }
 
   return chunks.length ? chunks : [text];
+}
+
+function compactParagraphs(paragraphs: string[]): string[] {
+  const result: string[] = [];
+  let shortBuffer: string[] = [];
+
+  const flushShortBuffer = () => {
+    if (shortBuffer.length === 0) {
+      return;
+    }
+
+    if (shortBuffer.length >= 3) {
+      result.push(shortBuffer.join("；"));
+    } else {
+      result.push(...shortBuffer);
+    }
+
+    shortBuffer = [];
+  };
+
+  for (const paragraph of paragraphs) {
+    const normalized = paragraph.replace(/\s+/g, " ").trim();
+    if (!normalized) {
+      continue;
+    }
+
+    const isShortFragment = normalized.length <= 28;
+    const isNumericOnly = /^[\d\s.,%()/-]+$/.test(normalized);
+
+    if (isShortFragment || isNumericOnly) {
+      shortBuffer.push(normalized);
+      continue;
+    }
+
+    flushShortBuffer();
+    result.push(normalized);
+  }
+
+  flushShortBuffer();
+  return result.length ? result : paragraphs;
 }
 
 function tokenSet(text: string): Set<string> {
