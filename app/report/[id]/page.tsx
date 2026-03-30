@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { getReportById } from "@/lib/report-store";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+
+export const runtime = "edge";
 
 type ReportPageProps = {
   params: Promise<{ id: string }>;
@@ -43,14 +45,7 @@ function colorClasses(color: string) {
 export default async function ReportPage({ params }: ReportPageProps) {
   const { id } = await params;
 
-  const report = await prisma.analysisReport.findUnique({
-    where: { id },
-    include: {
-      paragraphs: {
-        orderBy: { idx: "asc" },
-      },
-    },
-  });
+  const report = getReportById(id);
 
   if (!report) {
     notFound();

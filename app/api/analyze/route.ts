@@ -10,9 +10,9 @@ import {
   splitParagraphs,
 } from "@/lib/analyzer";
 import { parseUploadedFile } from "@/lib/file-parser";
-import { prisma } from "@/lib/prisma";
+import { listHistoryCandidates, saveReport } from "@/lib/report-store";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 type AnalyzeSuccess = {
   id: string;
@@ -22,25 +22,53 @@ type AnalyzeSuccess = {
   createdAt: string;
 };
 
+type AnalyzePayload = {
+  fileName: string;
+  fileType: string;
+  originalText: string;
+};
+
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file");
+    let fileName = "";
+    let ext = "";
+    let originalText = "";
 
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "请先上传文件" }, { status: 400 });
+    const contentType = request.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      const body = (await request.json()) as Partial<AnalyzePayload>;
+      fileName = body.fileName?.trim() ?? "";
+      ext = body.fileType?.trim().toLowerCase() ?? "";
+      originalText = body.originalText?.trim() ?? "";
+    } else {
+      const formData = await request.formData();
+      const file = formData.get("file");
+
+      if (!(file instanceof File)) {
+        return NextResponse.json({ error: "请先上传文件" }, { status: 400 });
+      }
+
+      fileName = file.name;
+      ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+      originalText = (await parseUploadedFile(file)).trim();
     }
 
-    const allowedTypes = ["txt", "doc", "docx", "pdf"];
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!allowedTypes.includes(ext)) {
+    if (!fileName || !ext) {
+      return NextResponse.json({ error: "文件信息无效" }, { status: 400 });
+    }
+
+    if (ext === "doc") {
       return NextResponse.json(
-        { error: "仅支持 txt、doc、docx、pdf 文件" },
+        { error: "doc 暂不支持，请先另存为 docx 后上传" },
         { status: 400 },
       );
     }
 
-    const originalText = (await parseUploadedFile(file)).trim();
+    const allowedTypes = ["txt", "docx", "pdf"];
+    if (!allowedTypes.includes(ext)) {
+      return NextResponse.json({ error: "仅支持 txt、docx、pdf 文件" }, { status: 400 });
+    }
+
     if (!originalText) {
       return NextResponse.json({ error: "未提取到有效文本内容" }, { status: 400 });
     }
@@ -48,34 +76,7 @@ export async function POST(request: Request) {
     const paragraphs = splitParagraphs(originalText);
     const normalizedText = normalizeText(originalText);
 
-    const [samples, reports] = await Promise.all([
-      prisma.historicalSample.findMany(),
-      prisma.analysisReport.findMany({
-        select: {
-          id: true,
-          fileName: true,
-          normalizedText: true,
-          totalAigcRate: true,
-        },
-        take: 100,
-        orderBy: { createdAt: "desc" },
-      }),
-    ]);
-
-    const candidates = [
-      ...samples.map((sample) => ({
-        id: sample.id,
-        name: sample.name,
-        normalizedText: sample.normalizedText,
-        totalAigcRate: sample.totalAigcRate,
-      })),
-      ...reports.map((report) => ({
-        id: report.id,
-        name: `历史报告:${report.fileName}`,
-        normalizedText: report.normalizedText,
-        totalAigcRate: report.totalAigcRate,
-      })),
-    ];
+    const candidates = listHistoryCandidates();
 
     const { score: topSimilarity, candidate } = findTopSimilarity(
       normalizedText,
@@ -95,25 +96,21 @@ export async function POST(request: Request) {
       paragraphCount: paragraphResults.length,
     });
 
-    const report = await prisma.analysisReport.create({
-      data: {
-        fileName: file.name,
-        fileType: ext,
-        originalText,
-        normalizedText,
-        totalAigcRate,
-        riskLevel,
-        paragraphCount: paragraphResults.length,
-        highRiskCount,
-        topSimilarity,
-        hitHistory: topSimilarity >= 0.8,
-        hitSampleName: candidate?.name,
-        conclusion,
-        disclaimer: DISCLAIMER_TEXT,
-        paragraphs: {
-          create: paragraphResults,
-        },
-      },
+    const report = saveReport({
+      fileName,
+      fileType: ext,
+      originalText,
+      normalizedText,
+      totalAigcRate,
+      riskLevel,
+      paragraphCount: paragraphResults.length,
+      highRiskCount,
+      topSimilarity,
+      hitHistory: topSimilarity >= 0.8,
+      hitSampleName: candidate?.name,
+      conclusion,
+      disclaimer: DISCLAIMER_TEXT,
+      paragraphs: paragraphResults,
     });
 
     return NextResponse.json<AnalyzeSuccess>({
@@ -121,7 +118,7 @@ export async function POST(request: Request) {
       fileName: report.fileName,
       totalAigcRate: report.totalAigcRate,
       riskLevel: report.riskLevel,
-      createdAt: report.createdAt.toISOString(),
+      createdAt: report.createdAt,
     });
   } catch (error) {
     const message =

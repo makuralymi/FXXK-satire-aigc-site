@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FileUp, LoaderCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { parseFileInBrowser } from "@/lib/client-file-parser";
 import {
   addDetectionRecord,
   clearDetectionHistory,
@@ -33,16 +34,25 @@ export default function DetectPage() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     setLoading(true);
     setError(null);
 
     try {
+      const { ext, text } = await parseFileInBrowser(file);
+      if (!text) {
+        throw new Error("未提取到有效文本内容");
+      }
+
       const response = await fetch("/api/analyze", {
         method: "POST",
-        body: formData,
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: ext,
+          originalText: text,
+        }),
       });
 
       const data = (await response.json()) as {

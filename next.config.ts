@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  serverExternalPackages: ["mammoth", "pdf-parse", "word-extractor"],
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

@@ -3,7 +3,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
-  title: "AIGC 论文检测神谕系统",
+  title: "AIGC 论文检测系统",
   description:
     "讽刺性概念站点：模拟主流检测平台，展示“用 AI 检测 AI、再用 AI 降 AI 率”的荒诞逻辑。",
 };
